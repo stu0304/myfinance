@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.finance.dao.TLoadDetailsDao" >
+  <resultMap id="BaseResultMap" type="com.finance.model.TLoadDetails" >
+    <id column="t_loan_id" property="tLoanId" jdbcType="VARCHAR" />
+    <result column="t_loanout_comid" property="tLoanoutComid" jdbcType="VARCHAR" />
+    <result column="t_loanin_comid" property="tLoaninComid" jdbcType="VARCHAR" />
+    <result column="t_loan_pre_time" property="tLoanPreTime" jdbcType="VARCHAR" />
+    <result column="t_loan_start_time" property="tLoanStartTime" jdbcType="VARCHAR" />
+    <result column="t_loan_num" property="tLoanNum" jdbcType="VARCHAR" />
+    <result column="t_loan_end_time" property="tLoanEndTime" jdbcType="VARCHAR" />
+    <result column="t_warn_days" property="tWarnDays" jdbcType="VARCHAR" />
+    <result column="t_weiyue_num" property="tWeiyueNum" jdbcType="VARCHAR" />
+    <result column="t_lixi" property="tLixi" jdbcType="VARCHAR" />
+    <result column="t_changhuan_total" property="tChanghuanTotal" jdbcType="VARCHAR" />
+    <result column="t_status" property="tStatus" jdbcType="VARCHAR" />
+    <result column="t_isWarn" property="isWarn" jdbcType="VARCHAR" />
+  
+  </resultMap>
+  <sql id="Base_Column_List" >
+    t_loan_id, t_loanout_comid, t_loanin_comid, t_loan_pre_time, t_loan_start_time, t_loan_num, 
+    t_loan_end_time, t_warn_days, t_weiyue_num, t_lixi, t_changhuan_total, t_status
+  </sql>
+  
+       <select id="selectCountLoanInHistory" resultType="String" parameterType="java.lang.String">
+		       select count(1) from t_loan_details l 
+		where l.t_loanin_comid=#{tComId,jdbcType=VARCHAR}
+		and l.t_status='债权方已审核' or l.t_status='债务方已确认' or l.t_status='债务方已提交'
+     </select>
+     
+     <select id="selectCountLoanOutHistory" resultType="String" parameterType="java.lang.String">
+		       select count(1) from t_loan_details l 
+		where l.t_loanout_comid=#{tComId,jdbcType=VARCHAR}
+		and l.t_status='债权方已审核' or l.t_status='债务方已确认'
+     </select>
+
+  
+    <select id="selectLoanInHistory" resultMap="BaseResultMap" parameterType="java.lang.String" >
+		  select c.t_com_name 't_loanin_comid',TO_DAYS(l.t_loan_end_time)-TO_DAYS(NOW()) 't_loan_pre_time',
+		case when TO_DAYS(l.t_loan_end_time)-TO_DAYS(NOW())<![CDATA[<=l.t_warn_days]]>  
+		
+		then '-1' else '0' end 't_warn_days',
+		
+         case when TO_DAYS(l.t_loan_end_time)<![CDATA[<TO_DAYS(NOW())]]>   
+		then 
+		ROUND(l.t_loan_num*(1+l.t_lixi)+(l.t_loan_num*l.t_weiyue_num),2) 
+		else 
+		ROUND(l.t_loan_num*(1+l.t_lixi),2) 
+		end 't_changhuan_total',
+
+		ifnull(ROUND(l.t_weiyue_num*l.t_loan_num,2),'未填写') 't_weiyue_num',
+		l.* from t_loan_details l LEFT JOIN t_company c 
+		on l.t_loanout_comid=c.t_com_id
+		where l.t_loanin_comid=#{tComId,jdbcType=VARCHAR}
+		and (l.t_status='债权方已审核' or l.t_status='债务方已提交' or l.t_status='债务方已确认' or l.t_status='债务方已还款')
+		
+		<choose>
+	<when test="tLoanStartTime != null and  tLoanStartTime !=''  and  tLoanEndTime != null and  tLoanEndTime !='' ">
+		and l.t_loan_start_time<![CDATA[>=#{tLoanStartTime,jdbcType=VARCHAR}]]> 
+		and l.t_loan_end_time<![CDATA[<=#{tLoanEndTime,jdbcType=VARCHAR}]]>
+    </when>                 
+</choose>
+		
+		
+<choose>
+	<when test="tComName != null and  tComName !=''">
+		and c.t_com_name like concat(concat('%',#{tComName}),'%') 
+    </when>
+</choose>
+
+  </select>
+  
+      <select id="selectLoanOutHistory" resultMap="BaseResultMap" parameterType="java.lang.String" >
+		  select c.t_com_name 't_loanin_comid',TO_DAYS(l.t_loan_end_time)-TO_DAYS(NOW()) 't_loan_pre_time',
+		case when TO_DAYS(l.t_loan_end_time)-TO_DAYS(NOW())<![CDATA[<=l.t_warn_days]]>  
+		
+		then '-1' else '0' end 't_isWarn',
+		
+		case when TO_DAYS(l.t_loan_end_time)<![CDATA[<TO_DAYS(NOW())]]>   
+		then 
+		ROUND(l.t_loan_num*(1+l.t_lixi)+(l.t_loan_num*l.t_weiyue_num),2) 
+		else 
+		ROUND(l.t_loan_num*(1+l.t_lixi),2) 
+		end 't_changhuan_total',
+		
+		l.t_warn_days,
+		ROUND(l.t_loan_num*(1+l.t_lixi),2) 't_changhuan_total',
+		ROUND(l.t_loan_num*l.t_weiyue_num,2) 't_weiyue_num',
+		l.* from t_loan_details l LEFT JOIN t_company c 
+		on l.t_loanin_comid=c.t_com_id
+		where l.t_loanout_comid=#{tComId,jdbcType=VARCHAR}
+		and (l.t_status='债权方已审核' or l.t_status='债务方已确认' or l.t_status='债务方已还款')
+
+
+<choose>
+	<when test="tComName != null and  tComName !=''">
+		and c.t_com_name like concat(concat('%',#{tComName}),'%') 
+    </when>
+</choose>
+<choose>
+	<when test="tLoanStartTime != null and  tLoanStartTime !=''  and  tLoanEndTime != null and  tLoanEndTime !='' ">
+		and l.t_loan_start_time<![CDATA[>=#{tLoanStartTime,jdbcType=VARCHAR}]]> 
+		and l.t_loan_end_time<![CDATA[<=#{tLoanEndTime,jdbcType=VARCHAR}]]>
+    </when>                 
+</choose>
+
+  </select>
+  
+     <select id="selectCountLoanDetails" resultType="String" parameterType="java.lang.String">
+      select count(1) from t_loan_details d 
+		where d.t_loanout_comid=#{tComId,jdbcType=VARCHAR}
+		and d.t_status='债务方已提交'
+     </select>
+  
+  <select id="selectLoanOutDetails" resultMap="BaseResultMap" parameterType="java.lang.String" >
+  
+  select  c.t_com_name as t_changhuan_total,d.* from t_loan_details d LEFT JOIN t_company c 
+on d.t_loanin_comid=c.t_com_id
+WHERE d.t_loanout_comid=#{tComId,jdbcType=VARCHAR} 
+and d.t_status='债务方已提交'
+
+<choose>
+	<when test="tComName != null and  tComName !=''">
+	and c.t_com_name like concat(concat('%',#{tComName}),'%') 
+    </when>
+</choose>
+
+  limit #{nextStartPage,jdbcType=INTEGER},#{v_pageSize,jdbcType=INTEGER}
+  </select>
+  
+
+  
+  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from t_loan_details
+    where t_loan_id = #{tLoanId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from t_loan_details
+    where t_loan_id = #{tLoanId,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.finance.model.TLoadDetails" >
+    insert into t_loan_details (t_loan_id, t_loanout_comid, t_loanin_comid, 
+      t_loan_pre_time, t_loan_start_time, t_loan_num, 
+      t_loan_end_time, t_warn_days, t_weiyue_num, 
+      t_lixi, t_changhuan_total, t_status
+      )
+    values (#{tLoanId,jdbcType=VARCHAR}, #{tLoanoutComid,jdbcType=VARCHAR}, #{tLoaninComid,jdbcType=VARCHAR}, 
+      #{tLoanPreTime,jdbcType=VARCHAR}, #{tLoanStartTime,jdbcType=VARCHAR}, #{tLoanNum,jdbcType=VARCHAR}, 
+      #{tLoanEndTime,jdbcType=VARCHAR}, #{tWarnDays,jdbcType=VARCHAR}, #{tWeiyueNum,jdbcType=VARCHAR}, 
+      #{tLixi,jdbcType=VARCHAR}, #{tChanghuanTotal,jdbcType=VARCHAR}, #{tStatus,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.finance.model.TLoadDetails" >
+    insert into t_loan_details
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="tLoanId != null" >
+        t_loan_id,
+      </if>
+      <if test="tLoanoutComid != null" >
+        t_loanout_comid,
+      </if>
+      <if test="tLoaninComid != null" >
+        t_loanin_comid,
+      </if>
+      <if test="tLoanPreTime != null" >
+        t_loan_pre_time,
+      </if>
+      <if test="tLoanStartTime != null" >
+        t_loan_start_time,
+      </if>
+      <if test="tLoanNum != null" >
+        t_loan_num,
+      </if>
+      <if test="tLoanEndTime != null" >
+        t_loan_end_time,
+      </if>
+      <if test="tWarnDays != null" >
+        t_warn_days,
+      </if>
+      <if test="tWeiyueNum != null" >
+        t_weiyue_num,
+      </if>
+      <if test="tLixi != null" >
+        t_lixi,
+      </if>
+      <if test="tChanghuanTotal != null" >
+        t_changhuan_total,
+      </if>
+      <if test="tStatus != null" >
+        t_status,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="tLoanId != null" >
+        #{tLoanId,jdbcType=VARCHAR},
+      </if>
+      <if test="tLoanoutComid != null" >
+        #{tLoanoutComid,jdbcType=VARCHAR},
+      </if>
+      <if test="tLoaninComid != null" >
+        #{tLoaninComid,jdbcType=VARCHAR},
+      </if>
+      <if test="tLoanPreTime != null" >
+        #{tLoanPreTime,jdbcType=VARCHAR},
+      </if>
+      <if test="tLoanStartTime != null" >
+        #{tLoanStartTime,jdbcType=VARCHAR},
+      </if>
+      <if test="tLoanNum != null" >
+        #{tLoanNum,jdbcType=VARCHAR},
+      </if>
+      <if test="tLoanEndTime != null" >
+        #{tLoanEndTime,jdbcType=VARCHAR},
+      </if>
+      <if test="tWarnDays != null" >
+        #{tWarnDays,jdbcType=VARCHAR},
+      </if>
+      <if test="tWeiyueNum != null" >
+        #{tWeiyueNum,jdbcType=VARCHAR},
+      </if>
+      <if test="tLixi != null" >
+        #{tLixi,jdbcType=VARCHAR},
+      </if>
+      <if test="tChanghuanTotal != null" >
+        #{tChanghuanTotal,jdbcType=VARCHAR},
+      </if>
+      <if test="tStatus != null" >
+        #{tStatus,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.finance.model.TLoadDetails" >
+    update t_loan_details
+    <set >
+      <if test="tLoanoutComid != null" >
+        t_loanout_comid = #{tLoanoutComid,jdbcType=VARCHAR},
+      </if>
+      <if test="tLoaninComid != null" >
+        t_loanin_comid = #{tLoaninComid,jdbcType=VARCHAR},
+      </if>
+      <if test="tLoanPreTime != null" >
+        t_loan_pre_time = #{tLoanPreTime,jdbcType=VARCHAR},
+      </if>
+      <if test="tLoanStartTime != null" >
+        t_loan_start_time = #{tLoanStartTime,jdbcType=VARCHAR},
+      </if>
+      <if test="tLoanNum != null" >
+        t_loan_num = #{tLoanNum,jdbcType=VARCHAR},
+      </if>
+      <if test="tLoanEndTime != null" >
+        t_loan_end_time = #{tLoanEndTime,jdbcType=VARCHAR},
+      </if>
+      <if test="tWarnDays != null" >
+        t_warn_days = #{tWarnDays,jdbcType=VARCHAR},
+      </if>
+      <if test="tWeiyueNum != null" >
+        t_weiyue_num = #{tWeiyueNum,jdbcType=VARCHAR},
+      </if>
+      <if test="tLixi != null" >
+        t_lixi = #{tLixi,jdbcType=VARCHAR},
+      </if>
+      <if test="tChanghuanTotal != null" >
+        t_changhuan_total = #{tChanghuanTotal,jdbcType=VARCHAR},
+      </if>
+      <if test="tStatus != null" >
+        t_status = #{tStatus,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where t_loan_id = #{tLoanId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.finance.model.TLoadDetails" >
+    update t_loan_details
+    set t_loanout_comid = #{tLoanoutComid,jdbcType=VARCHAR},
+      t_loanin_comid = #{tLoaninComid,jdbcType=VARCHAR},
+      t_loan_pre_time = #{tLoanPreTime,jdbcType=VARCHAR},
+      t_loan_start_time = #{tLoanStartTime,jdbcType=VARCHAR},
+      t_loan_num = #{tLoanNum,jdbcType=VARCHAR},
+      t_loan_end_time = #{tLoanEndTime,jdbcType=VARCHAR},
+      t_warn_days = #{tWarnDays,jdbcType=VARCHAR},
+      t_weiyue_num = #{tWeiyueNum,jdbcType=VARCHAR},
+      t_lixi = #{tLixi,jdbcType=VARCHAR},
+      t_changhuan_total = #{tChanghuanTotal,jdbcType=VARCHAR},
+      t_status = #{tStatus,jdbcType=VARCHAR}
+    where t_loan_id = #{tLoanId,jdbcType=VARCHAR}
+  </update>
+</mapper>

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.finance.dao.TZiChanFuZhaiDao" >
+  <resultMap id="BaseResultMap" type="com.finance.model.TZiChanFuZhai" >
+    <id column="t_zcfz_id" property="tZcfzId" jdbcType="VARCHAR" />
+    <result column="t_com_id" property="tComId" jdbcType="VARCHAR" />
+    <result column="t_huobizijin" property="tHuobizijin" jdbcType="VARCHAR" />
+    <result column="t_yingshouzhangkuan" property="tYingshouzhangkuan" jdbcType="VARCHAR" />
+    <result column="t_gudingzichanyuanzhi" property="tGudingzichanyuanzhi" jdbcType="VARCHAR" />
+    <result column="t_leijizhejiu" property="tLeijizhejiu" jdbcType="VARCHAR" />
+    <result column="t_gudingzichanheji" property="tGudingzichanheji" jdbcType="VARCHAR" />
+    <result column="t_zichanheji" property="tZichanheji" jdbcType="VARCHAR" />
+  </resultMap>
+  
+    <resultMap id="comCapitalResultMap" type="com.finance.model.VOComZcfz" >
+    <id column="t_zcfz_id" property="tComName" jdbcType="VARCHAR" />
+    <result column="t_com_id" property="tComId" jdbcType="VARCHAR" />
+    <result column="t_huobizijin" property="tHuobizijin" jdbcType="VARCHAR" />
+    <result column="t_yingshouzhangkuan" property="tYingshouzhangkuan" jdbcType="VARCHAR" />
+    <result column="t_gudingzichanyuanzhi" property="tGudingzichanyuanzhi" jdbcType="VARCHAR" />
+    <result column="t_leijizhejiu" property="tLeijizhejiu" jdbcType="VARCHAR" />
+    <result column="t_gudingzichanheji" property="tGudingzichanheji" jdbcType="VARCHAR" />
+    <result column="t_zichanheji" property="tZichanheji" jdbcType="VARCHAR" />
+  
+  </resultMap>
+  
+  
+  <sql id="Base_Column_List" >
+    t_zcfz_id, t_com_id, t_huobizijin, t_yingshouzhangkuan, t_gudingzichanyuanzhi, t_leijizhejiu, 
+    t_gudingzichanheji, t_zichanheji
+  </sql>
+  
+    <select id="getZcfzByComId" resultMap="BaseResultMap" parameterType="java.lang.String" >
+		SELECT * from t_zichanfuzhai z
+		where z.t_com_id=#{tComId,jdbcType=VARCHAR}
+  </select>
+  
+     <select id="selectCountComCapital" resultType="String" parameterType="java.lang.String" > 
+		
+		select count(1) from t_company c LEFT JOIN t_zichanfuzhai z on c.t_com_id=z.t_com_id where c.t_com_id !=#{tComId,jdbcType=VARCHAR} 
+     </select>
+  
+  
+  
+  <select id="selectCompanyCapital" resultMap="comCapitalResultMap" parameterType="java.lang.String" >
+  
+   select c.t_com_name as t_zcfz_id,z.t_com_id,IFNULL(z.t_zichanheji,0) as t_zichanheji from t_company c LEFT JOIN t_zichanfuzhai z
+on c.t_com_id=z.t_com_id where c.t_com_id !=#{tComId,jdbcType=VARCHAR}
+<choose>
+	<when test="tComName != null and  tComName !=''">
+		and c.t_com_name like concat(concat('%',#{tComName}),'%') 
+    </when>
+     <otherwise>  
+          ORDER BY t_zichanheji desc      limit #{nextStartPage,jdbcType=INTEGER},#{v_pageSize,jdbcType=INTEGER}
+      </otherwise>  
+</choose>
+
+
+  </select>
+  
+  <select id="selectByCompanyID" resultMap="BaseResultMap" parameterType="java.lang.String" >
+		                   select z.t_com_id,
+     IFNULL(z.t_gudingzichanheji,0) as t_gudingzichanheji,
+   IFNULL(z.t_gudingzichanyuanzhi,0) as t_gudingzichanyuanzhi,
+    IFNULL(z.t_huobizijin,0) as t_huobizijin, 
+IFNULL(z.t_leijizhejiu,0) as t_leijizhejiu,
+IFNULL(z.t_yingshouzhangkuan,0) as t_yingshouzhangkuan,
+IFNULL(z.t_zichanheji,0) as t_zichanheji
+
+from t_zichanfuzhai z
+where z.t_com_id=#{tComId,jdbcType=VARCHAR}
+    
+  </select>
+  
+  <update id="updateByCompanyId" parameterType="com.finance.model.TZiChanFuZhai" >
+    update t_zichanfuzhai
+    <set >
+      <if test="tHuobizijin != null" >
+        t_huobizijin = #{tHuobizijin,jdbcType=VARCHAR},
+      </if>
+      <if test="tYingshouzhangkuan != null" >
+        t_yingshouzhangkuan = #{tYingshouzhangkuan,jdbcType=VARCHAR},
+      </if>
+      <if test="tGudingzichanyuanzhi != null" >
+        t_gudingzichanyuanzhi = #{tGudingzichanyuanzhi,jdbcType=VARCHAR},
+      </if>
+      <if test="tLeijizhejiu != null" >
+        t_leijizhejiu = #{tLeijizhejiu,jdbcType=VARCHAR},
+      </if>
+      <if test="tGudingzichanheji != null" >
+        t_gudingzichanheji = #{tGudingzichanheji,jdbcType=VARCHAR},
+      </if>
+      <if test="tZichanheji != null" >
+        t_zichanheji = #{tZichanheji,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where t_com_id = #{tComId,jdbcType=VARCHAR}
+  </update>
+  
+  
+  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from t_zichanfuzhai
+    where t_zcfz_id = #{tZcfzId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from t_zichanfuzhai
+    where t_zcfz_id = #{tZcfzId,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.finance.model.TZiChanFuZhai" >
+    insert into t_zichanfuzhai (t_zcfz_id, t_com_id, t_huobizijin, 
+      t_yingshouzhangkuan, t_gudingzichanyuanzhi, 
+      t_leijizhejiu, t_gudingzichanheji, t_zichanheji
+      )
+    values (#{tZcfzId,jdbcType=VARCHAR}, #{tComId,jdbcType=VARCHAR}, #{tHuobizijin,jdbcType=VARCHAR}, 
+      #{tYingshouzhangkuan,jdbcType=VARCHAR}, #{tGudingzichanyuanzhi,jdbcType=VARCHAR}, 
+      #{tLeijizhejiu,jdbcType=VARCHAR}, #{tGudingzichanheji,jdbcType=VARCHAR}, #{tZichanheji,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.finance.model.TZiChanFuZhai" >
+    insert into t_zichanfuzhai
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="tZcfzId != null" >
+        t_zcfz_id,
+      </if>
+      <if test="tComId != null" >
+        t_com_id,
+      </if>
+      <if test="tHuobizijin != null" >
+        t_huobizijin,
+      </if>
+      <if test="tYingshouzhangkuan != null" >
+        t_yingshouzhangkuan,
+      </if>
+      <if test="tGudingzichanyuanzhi != null" >
+        t_gudingzichanyuanzhi,
+      </if>
+      <if test="tLeijizhejiu != null" >
+        t_leijizhejiu,
+      </if>
+      <if test="tGudingzichanheji != null" >
+        t_gudingzichanheji,
+      </if>
+      <if test="tZichanheji != null" >
+        t_zichanheji,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="tZcfzId != null" >
+        #{tZcfzId,jdbcType=VARCHAR},
+      </if>
+      <if test="tComId != null" >
+        #{tComId,jdbcType=VARCHAR},
+      </if>
+      <if test="tHuobizijin != null" >
+        #{tHuobizijin,jdbcType=VARCHAR},
+      </if>
+      <if test="tYingshouzhangkuan != null" >
+        #{tYingshouzhangkuan,jdbcType=VARCHAR},
+      </if>
+      <if test="tGudingzichanyuanzhi != null" >
+        #{tGudingzichanyuanzhi,jdbcType=VARCHAR},
+      </if>
+      <if test="tLeijizhejiu != null" >
+        #{tLeijizhejiu,jdbcType=VARCHAR},
+      </if>
+      <if test="tGudingzichanheji != null" >
+        #{tGudingzichanheji,jdbcType=VARCHAR},
+      </if>
+      <if test="tZichanheji != null" >
+        #{tZichanheji,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.finance.model.TZiChanFuZhai" >
+    update t_zichanfuzhai
+    <set >
+      <if test="tComId != null" >
+        t_com_id = #{tComId,jdbcType=VARCHAR},
+      </if>
+      <if test="tHuobizijin != null" >
+        t_huobizijin = #{tHuobizijin,jdbcType=VARCHAR},
+      </if>
+      <if test="tYingshouzhangkuan != null" >
+        t_yingshouzhangkuan = #{tYingshouzhangkuan,jdbcType=VARCHAR},
+      </if>
+      <if test="tGudingzichanyuanzhi != null" >
+        t_gudingzichanyuanzhi = #{tGudingzichanyuanzhi,jdbcType=VARCHAR},
+      </if>
+      <if test="tLeijizhejiu != null" >
+        t_leijizhejiu = #{tLeijizhejiu,jdbcType=VARCHAR},
+      </if>
+      <if test="tGudingzichanheji != null" >
+        t_gudingzichanheji = #{tGudingzichanheji,jdbcType=VARCHAR},
+      </if>
+      <if test="tZichanheji != null" >
+        t_zichanheji = #{tZichanheji,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where t_zcfz_id = #{tZcfzId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.finance.model.TZiChanFuZhai" >
+    update t_zichanfuzhai
+    set t_com_id = #{tComId,jdbcType=VARCHAR},
+      t_huobizijin = #{tHuobizijin,jdbcType=VARCHAR},
+      t_yingshouzhangkuan = #{tYingshouzhangkuan,jdbcType=VARCHAR},
+      t_gudingzichanyuanzhi = #{tGudingzichanyuanzhi,jdbcType=VARCHAR},
+      t_leijizhejiu = #{tLeijizhejiu,jdbcType=VARCHAR},
+      t_gudingzichanheji = #{tGudingzichanheji,jdbcType=VARCHAR},
+      t_zichanheji = #{tZichanheji,jdbcType=VARCHAR}
+    where t_zcfz_id = #{tZcfzId,jdbcType=VARCHAR}
+  </update>
+</mapper>

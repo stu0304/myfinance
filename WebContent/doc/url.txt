@@ -1,0 +1,5 @@
+http://localhost:8252/fincance/gotocompanyTree.do
+
+		VOPersonAtt myperson = (VOPersonAtt)request.getSession().getAttribute("myperson");
+			loanDetails.settLoanoutComid(myperson.gettComId());
+			

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.finance.dao.TCompanyDao" >
+  <resultMap id="BaseResultMap" type="com.finance.model.TCompany" >
+    <id column="t_com_id" property="tComId" jdbcType="VARCHAR" />
+    <result column="t_com_pid" property="tComPid" jdbcType="VARCHAR" />
+    <result column="t_com_name" property="tComName" jdbcType="VARCHAR" />
+    <result column="t_org_code" property="tOrgCode" jdbcType="VARCHAR" />
+    <result column="t_address" property="tAddress" jdbcType="VARCHAR" />
+    <result column="t_zhuceriqi" property="tZhuceriqi" jdbcType="VARCHAR" />
+    <result column="t_zhuciziben" property="tZhuciziben" jdbcType="VARCHAR" />
+    <result column="t_faren" property="tFaren" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    t_com_id, t_com_pid, t_com_name, t_org_code, t_address, t_zhuceriqi, t_zhuciziben, 
+    t_faren
+  </sql>
+   <select id="selectCountCompany" resultType="String">
+        select count(1) from t_company
+     </select>
+  
+  <select id="selectComTreeList" resultMap="BaseResultMap" parameterType="java.lang.String" >
+   
+    select 
+    <include refid="Base_Column_List" />
+    from t_company
+    where t_com_pid = #{tCompid,jdbcType=VARCHAR}
+     
+  </select>
+    
+     <select id="selectOneComForUpdate" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select c1.t_com_id,c1.t_com_name ,c2.t_com_id as t_org_code, c2.t_com_name as t_address
+	from t_company c1,t_company c2 where 
+	c1.t_com_id=#{tComId,jdbcType=VARCHAR} and c1.t_com_pid=c2.t_com_id
+
+  </select>
+    
+    
+    
+  
+
+    
+  
+  <select id="selectAllCompany" resultMap="BaseResultMap" parameterType="java.lang.String" >
+select c1.t_com_id,c2.t_com_name,c1.t_com_name as t_com_pid from t_company c1,t_company c2
+where c1.t_com_pid=c2.t_com_id 
+
+<choose>
+	<when test="tComName != null and  tComName !=''">
+		and c1.t_com_name like concat(concat('%',#{tComName}),'%') 
+    </when>
+</choose>
+    limit #{nextStartPage,jdbcType=INTEGER},#{v_pageSize,jdbcType=INTEGER}
+  </select>
+  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from t_company
+    where t_com_id = #{tComId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from t_company
+    where t_com_id = #{tComId,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.finance.model.TCompany" >
+    insert into t_company (t_com_id, t_com_pid, t_com_name, 
+      t_org_code, t_address, t_zhuceriqi, 
+      t_zhuciziben, t_faren)
+    values (#{tComId,jdbcType=VARCHAR}, #{tComPid,jdbcType=VARCHAR}, #{tComName,jdbcType=VARCHAR}, 
+      #{tOrgCode,jdbcType=VARCHAR}, #{tAddress,jdbcType=VARCHAR}, #{tZhuceriqi,jdbcType=VARCHAR}, 
+      #{tZhuciziben,jdbcType=VARCHAR}, #{tFaren,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.finance.model.TCompany" >
+    insert into t_company
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="tComId != null" >
+        t_com_id,
+      </if>
+      <if test="tComPid != null" >
+        t_com_pid,
+      </if>
+      <if test="tComName != null" >
+        t_com_name,
+      </if>
+      <if test="tOrgCode != null" >
+        t_org_code,
+      </if>
+      <if test="tAddress != null" >
+        t_address,
+      </if>
+      <if test="tZhuceriqi != null" >
+        t_zhuceriqi,
+      </if>
+      <if test="tZhuciziben != null" >
+        t_zhuciziben,
+      </if>
+      <if test="tFaren != null" >
+        t_faren,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="tComId != null" >
+        #{tComId,jdbcType=VARCHAR},
+      </if>
+      <if test="tComPid != null" >
+        #{tComPid,jdbcType=VARCHAR},
+      </if>
+      <if test="tComName != null" >
+        #{tComName,jdbcType=VARCHAR},
+      </if>
+      <if test="tOrgCode != null" >
+        #{tOrgCode,jdbcType=VARCHAR},
+      </if>
+      <if test="tAddress != null" >
+        #{tAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="tZhuceriqi != null" >
+        #{tZhuceriqi,jdbcType=VARCHAR},
+      </if>
+      <if test="tZhuciziben != null" >
+        #{tZhuciziben,jdbcType=VARCHAR},
+      </if>
+      <if test="tFaren != null" >
+        #{tFaren,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.finance.model.TCompany" >
+    update t_company
+    <set >
+      <if test="tComPid != null" >
+        t_com_pid = #{tComPid,jdbcType=VARCHAR},
+      </if>
+      <if test="tComName != null" >
+        t_com_name = #{tComName,jdbcType=VARCHAR},
+      </if>
+      <if test="tOrgCode != null" >
+        t_org_code = #{tOrgCode,jdbcType=VARCHAR},
+      </if>
+      <if test="tAddress != null" >
+        t_address = #{tAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="tZhuceriqi != null" >
+        t_zhuceriqi = #{tZhuceriqi,jdbcType=VARCHAR},
+      </if>
+      <if test="tZhuciziben != null" >
+        t_zhuciziben = #{tZhuciziben,jdbcType=VARCHAR},
+      </if>
+      <if test="tFaren != null" >
+        t_faren = #{tFaren,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where t_com_id = #{tComId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.finance.model.TCompany" >
+    update t_company
+    set t_com_pid = #{tComPid,jdbcType=VARCHAR},
+      t_com_name = #{tComName,jdbcType=VARCHAR},
+      t_org_code = #{tOrgCode,jdbcType=VARCHAR},
+      t_address = #{tAddress,jdbcType=VARCHAR},
+      t_zhuceriqi = #{tZhuceriqi,jdbcType=VARCHAR},
+      t_zhuciziben = #{tZhuciziben,jdbcType=VARCHAR},
+      t_faren = #{tFaren,jdbcType=VARCHAR}
+    where t_com_id = #{tComId,jdbcType=VARCHAR}
+  </update>
+</mapper>
